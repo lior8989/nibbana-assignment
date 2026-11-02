@@ -1,52 +1,69 @@
 # StockStream — Backlog Sync Processor
 
-Drains the `queue_messages` backlog with 4 worker processes and rebuilds each
-store's current stock in `store_stock`, recording every applied update in
-`apply_log`. Full spec: [ASSIGNMENT.md](ASSIGNMENT.md).
+Drains the `queue_messages` backlog with **4 worker OS processes** and rebuilds each
+store's current stock in `store_stock`, recording every applied update exactly once in
+`apply_log`. Spec: [ASSIGNMENT.md](ASSIGNMENT.md) · Design: [DESIGN.md](DESIGN.md) ·
+AI usage: [AI-USAGE.md](AI-USAGE.md).
 
-> Work in progress — the run command and design notes will be added as the
-> processor is built. See `DESIGN.md` (coming) for the design.
+## Quick start
 
-## Prerequisites
-
-- Node.js ≥ 20
-- Docker (for Postgres 16)
-
-## Setup
+Prerequisites: Node.js ≥ 20, Docker.
 
 ```bash
 npm install
-npm run db:up    # docker compose up -d --wait  (Postgres on localhost:5439)
-npm run seed     # applies schema.sql, resets, fills the queue
-npm run migrate  # optional: `npm start` applies migrations itself
+npm run db:up               # Postgres 16 on localhost:5439 (docker compose)
+npm run seed && npm start   # seed, then start immediately — one command runs all 4 workers
+npm run verify              # check the result against an independent replay
 ```
 
-## Run
+`npm start` exits **0** when everything that can be done is done (~25 s on the default
+seed: the run waits for receipt uploads that finish up to ~25 s after seeding).
 
-```bash
-npm run seed && npm start   # start immediately after seeding
-```
-
-`npm start` applies migrations, then starts the supervisor, which runs **4 worker OS
-processes**. A crashed or killed worker is restarted in its slot (up to 20 restarts).
-The app exits **0** once every worker has finished.
-
-Check the result afterwards:
-
-```bash
-npm run verify   # reconciles store_stock + apply_log against an independent replay of the queue
-```
-
-Hostile variants: `node seed.js --poison` (one receipt never uploads) and `SEED=7 npm run seed`.
+Hostile variants: `node seed.js --poison` (one receipt never uploads) and a different
+seed — `SEED=7 npm run seed` (bash) / `$env:SEED=7; npm run seed` (PowerShell).
 
 Connection string (override with `DATABASE_URL`):
 `postgres://postgres:postgres@localhost:5439/stockstream`
 
-## Development
+## How it works (short)
+
+- **Supervisor** (`src/main.ts`) applies our migrations, then keeps 4 worker processes
+  running: a worker that exits 0 is done; a crashed/killed one is restarted (≤ 20 times).
+  Workers are started with `spawn` (no IPC) — Postgres is the only shared channel.
+- **Workers** claim a store via a 5 s lease in `store_claims`, then process its messages in
+  `seq` order, **one transaction per message**: lease check + `store_stock` + `apply_log` +
+  queue row status commit together. Up to 8 stores per worker run concurrently.
+- **Rules per message** (`src/domain/decide.ts`): apply the next seq when its receipt is
+  ready; skip retransmits; wait while a receipt uploads; on a receipt that failed for good,
+  skip to the next snapshot or, if none, leave the store blocked so the run can still finish.
+- Details, risks, and trade-offs: [DESIGN.md](DESIGN.md).
+
+| Exit code | Meaning |
+|---|---|
+| `0` | all workers finished — nothing actionable or waiting remains |
+| `1` | a worker exceeded the restart limit, or the app was stopped (Ctrl+C) |
+
+## Project layout
+
+```
+src/
+  main.ts              app entry: migrate → supervisor (npm start)
+  worker-main.ts       worker process entry
+  supervisor/          process supervision (spawn, restart, exit code)
+  worker/              scheduling loop, per-message transaction, all SQL
+  domain/              pure rules: applyUpdate, decideNext
+  db/                  pool, transaction helper, migration runner
+  verify/              independent replay + reconciliation (npm run verify)
+migrations/            our additive schema changes (schema.sql is untouched)
+scripts/chaos/         chaos scenarios (npm run chaos)
+test/                  unit + integration tests (Vitest)
+```
+
+## Tests
 
 ```bash
 npm run typecheck   # TypeScript type check
-npm test            # unit + integration tests (Vitest; needs Postgres running)
+npm test            # unit + integration tests (needs Postgres running)
 npm run test:unit   # unit tests only
 ```
 
