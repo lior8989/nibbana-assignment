@@ -22,7 +22,8 @@ ESM), `pg` driver, Vitest, Postgres 16 via docker compose.
 - The owner delegated closing the design (risks + handling) to Claude due to time
   pressure. Keep every decision short and visible, and summarise each task so the owner
   can review, correct, and defend it. Never change an agreed decision without asking.
-- `DESIGN.md` and `AI-USAGE.md` are written by the owner.
+- `DESIGN.md` and `AI-USAGE.md` were drafted by Claude at the owner's request. Keep them
+  true to the code, and keep `AI-USAGE.md` honest about who did what.
 
 ## Git workflow
 
