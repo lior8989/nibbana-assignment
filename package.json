@@ -13,7 +13,8 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "migrate": "tsx src/migrate-main.ts",
-    "test:unit": "vitest run --exclude \"**/*.int.test.ts\""
+    "test:unit": "vitest run --exclude \"**/*.int.test.ts\"",
+    "start": "tsx src/main.ts"
   },
   "dependencies": {
     "pg": "^8.13.1"

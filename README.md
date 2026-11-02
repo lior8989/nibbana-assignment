@@ -18,8 +18,18 @@ store's current stock in `store_stock`, recording every applied update in
 npm install
 npm run db:up    # docker compose up -d --wait  (Postgres on localhost:5439)
 npm run seed     # applies schema.sql, resets, fills the queue
-npm run migrate  # applies our schema additions (migrations/*.sql); safe to re-run
+npm run migrate  # optional: `npm start` applies migrations itself
 ```
+
+## Run
+
+```bash
+npm run seed && npm start   # start immediately after seeding
+```
+
+`npm start` applies migrations, then starts the supervisor, which runs **4 worker OS
+processes**. A crashed or killed worker is restarted in its slot (up to 20 restarts).
+The app exits **0** once every worker has finished.
 
 Connection string (override with `DATABASE_URL`):
 `postgres://postgres:postgres@localhost:5439/stockstream`
