@@ -31,6 +31,14 @@ npm run seed && npm start   # start immediately after seeding
 processes**. A crashed or killed worker is restarted in its slot (up to 20 restarts).
 The app exits **0** once every worker has finished.
 
+Check the result afterwards:
+
+```bash
+npm run verify   # reconciles store_stock + apply_log against an independent replay of the queue
+```
+
+Hostile variants: `node seed.js --poison` (one receipt never uploads) and `SEED=7 npm run seed`.
+
 Connection string (override with `DATABASE_URL`):
 `postgres://postgres:postgres@localhost:5439/stockstream`
 
