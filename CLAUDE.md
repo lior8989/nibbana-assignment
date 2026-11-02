@@ -37,6 +37,8 @@ ESM), `pg` driver, Vitest, Postgres 16 via docker compose.
 npm run db:up       # start Postgres (docker compose)
 npm run seed        # apply schema.sql, reset, fill the queue
 npm run migrate     # apply our additions in migrations/ (idempotent)
+npm start           # migrate + run the 4-worker fleet; exits 0 when done
+npm run verify      # reconcile store_stock/apply_log against an independent replay
 npm run typecheck   # tsc --noEmit
 npm test            # vitest: unit + integration (*.int.test.ts needs Postgres)
 npm run test:unit   # unit tests only, no DB needed

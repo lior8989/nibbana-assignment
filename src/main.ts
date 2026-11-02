@@ -6,6 +6,7 @@ import { runMigrations } from './db/migrate.js'
 import { createPool } from './db/pool.js'
 import { spawnWorkerProcess } from './supervisor/spawn-worker.js'
 import { Supervisor } from './supervisor/supervisor.js'
+import { resetFailures } from './worker/queries.js'
 
 /** The assignment requires exactly 4 worker OS processes. */
 const WORKER_COUNT = 4
@@ -13,9 +14,11 @@ const WORKER_COUNT = 4
 const config = loadConfig()
 
 // Migrate once here, before any worker starts, so workers can assume the schema exists.
+// Also give stores set aside by a previous run a fresh set of attempts.
 const pool = createPool(config.databaseUrl, 1)
 try {
   await runMigrations(pool)
+  await resetFailures(pool)
 } finally {
   await pool.end()
 }

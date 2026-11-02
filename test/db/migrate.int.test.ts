@@ -15,7 +15,7 @@ afterAll(async () => db?.drop())
 describe('runMigrations', () => {
   it('applies every migration once even when started concurrently', async () => {
     const results = await Promise.all([runMigrations(pool), runMigrations(pool), runMigrations(pool)])
-    expect(results.flat()).toEqual(['001_processing_state.sql'])
+    expect(results.flat().sort()).toEqual(['001_processing_state.sql', '002_claim_failures.sql'])
     expect(await runMigrations(pool)).toEqual([])
   })
 
@@ -29,6 +29,8 @@ describe('runMigrations', () => {
       'queue_messages.outcome',
       'queue_messages.processed_at',
       'store_claims.chain_id',
+      'store_claims.failures',
+      'store_claims.last_error',
       'store_claims.locked_by',
       'store_claims.locked_until',
       'store_claims.store_id',

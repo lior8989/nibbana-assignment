@@ -14,7 +14,8 @@
     "db:down": "docker compose down",
     "migrate": "tsx src/migrate-main.ts",
     "test:unit": "vitest run --exclude \"**/*.int.test.ts\"",
-    "start": "tsx src/main.ts"
+    "start": "tsx src/main.ts",
+    "verify": "tsx src/verify-main.ts"
   },
   "dependencies": {
     "pg": "^8.13.1"
