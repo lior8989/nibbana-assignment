@@ -19,9 +19,9 @@ ESM), `pg` driver, Vitest, Postgres 16 via docker compose.
 
 ## Ownership
 
-- Risk/edge-case identification, how each is handled, and the worker
-  coordination design are decided by the project owner. Do not propose
-  solutions to them unless the owner explicitly asks; implement the owner's decisions.
+- The owner delegated closing the design (risks + handling) to Claude due to time
+  pressure. Keep every decision short and visible, and summarise each task so the owner
+  can review, correct, and defend it. Never change an agreed decision without asking.
 - `DESIGN.md` and `AI-USAGE.md` are written by the owner.
 
 ## Git workflow
@@ -36,6 +36,8 @@ ESM), `pg` driver, Vitest, Postgres 16 via docker compose.
 ```bash
 npm run db:up       # start Postgres (docker compose)
 npm run seed        # apply schema.sql, reset, fill the queue
+npm run migrate     # apply our additions in migrations/ (idempotent)
 npm run typecheck   # tsc --noEmit
-npm test            # vitest
+npm test            # vitest: unit + integration (*.int.test.ts needs Postgres)
+npm run test:unit   # unit tests only, no DB needed
 ```
