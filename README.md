@@ -52,3 +52,22 @@ npm run test:unit   # unit tests only
 
 Integration tests (`*.int.test.ts`) create and drop their own `stockstream_test_*`
 databases, so they never touch the seeded data.
+
+## Chaos testing
+
+```bash
+npm run chaos                       # all scenarios (~3 min)
+npm run chaos kill-one-worker       # or pick scenarios by name
+```
+
+Each scenario seeds, runs the app while injecting failures, then reconciles the result
+with `verify`. App output goes to `logs/chaos-<scenario>.log`.
+
+| Scenario | What it does |
+|---|---|
+| `baseline` | normal run (SEED=42) |
+| `poison-other-seed` | SEED=7 with `--poison` (a receipt that never uploads) |
+| `kill-one-worker` | SIGKILL one worker mid-run; the supervisor restarts it |
+| `kill-workers-repeatedly` | SIGKILL a random worker every second, 6 times, with `--poison` |
+| `restart-whole-app` | SIGKILL the supervisor and all workers mid-run, then start the app again |
+| `orphaned-workers` | SIGKILL only the supervisor; its workers keep running while a second app starts alongside them |
