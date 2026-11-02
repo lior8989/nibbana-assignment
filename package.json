@@ -15,7 +15,8 @@
     "migrate": "tsx src/migrate-main.ts",
     "test:unit": "vitest run --exclude \"**/*.int.test.ts\"",
     "start": "tsx src/main.ts",
-    "verify": "tsx src/verify-main.ts"
+    "verify": "tsx src/verify-main.ts",
+    "chaos": "tsx scripts/chaos/run.ts"
   },
   "dependencies": {
     "pg": "^8.13.1"
