@@ -48,6 +48,29 @@ Because I was short on time, I **delegated the rest to the AI**:
 - **Environment setup**: installed Docker Desktop and the GitHub CLI, ran Postgres and the seed.
 - **Drafted `DESIGN.md` and this file** at my request; I reviewed them.
 
+## Understanding the generated code
+
+Since the AI wrote the code, I needed to understand it well enough to explain and extend
+it myself. I considered asking for an animated video walkthrough, but chose a cheaper,
+more direct route: a **question-by-question walkthrough in my native language (Hebrew)**,
+folder by folder in dependency order, with short explanations of what each file does and
+which requirement it serves:
+
+1. **`config`, `db`, `migrations`** — connection pool, the transaction helper (all-or-nothing
+   writes), the migration runner (additive schema changes, since `schema.sql` is read-only),
+   and what each added column, index, and table is for.
+2. **`domain`** — the pure rules: `applyUpdate` (snapshot replaces, delta set-then-unset) and
+   `decideNext` (apply / discard / wait / skip-to-snapshot / blocked), and why the same rules
+   also exist in SQL.
+3. **`worker`** — all SQL in one module, one message per transaction with the lease fence,
+   and the scheduling loop (8 stores per worker, release a store that must wait, exit when
+   no work is left).
+4. **`supervisor` and entry points** — exactly 4 slots, restart on crash, `spawn` instead of
+   `fork` (no IPC), migrations before workers, and the exit codes.
+
+I stopped the walkthrough there; `verify`, the chaos scripts, and the tests I know from
+their results and from `DESIGN.md` §4 rather than line by line.
+
 ## Where the AI got it wrong
 
 All of these were caught by the AI's own test runs and checks during development, before
